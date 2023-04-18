@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Logic.Interfaces;
+using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,13 +11,18 @@ namespace FolderSizeCalculation.Controllers
     [ApiController]
     public class DiskSpaceController : Controller
     {
-        public DiskSpaceController()
-        { }
+        private IDiskSpace _diskSpace;
+        public DiskSpaceController(IDiskSpace diskSpace)
+        {
+            _diskSpace = diskSpace;
+        }
 
         [HttpGet("{path}")]
-        public IActionResult GetFiles(string path)
+        public Dictionary<string, long> GetFiles(string path)
         {
-            return Ok();
+            var info = _diskSpace.GetFiles(path);
+            return info;
+            //return Ok();
         }
     }
 }
