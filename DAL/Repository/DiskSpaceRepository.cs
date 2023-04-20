@@ -5,14 +5,20 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FileInfo = Logic.Models.FileInfo;
 
 namespace Logic.Repository
 {
-    public class DiskSpaceRepository : IDiskSpace
+    public class DiskSpaceRepository : IDiskSpaceRepository
     {
-        public Dictionary<string, long> GetFiles(string path)
+        private IDiskSpaceProcessor _diskSpaceProc;
+        public DiskSpaceRepository(IDiskSpaceProcessor diskSpaceProc)
         {
-            var filesInfo = new Dictionary<string, long>();
+            _diskSpaceProc = diskSpaceProc;
+        }
+        public List<FileInfo> GetFiles(string path)
+        {
+            var filesInfo = new List<FileInfo>();
 
             if (Directory.Exists(path))
             {
@@ -21,17 +27,24 @@ namespace Logic.Repository
 
                 foreach (var dir in dirs)
                 {
-                    filesInfo.Add(dir.Name, SumSizeDirectories(new DirectoryInfo[] { dir }));
+                    filesInfo.Add( new FileInfo() { Name = dir.Name, Size = _diskSpaceProc.SumSizeDirectories(new DirectoryInfo[] { dir }).ToString(),
+                    IsDirectory = true});
                 }
 
                 foreach (var file in files)
                 {
-                    filesInfo.Add(file.Name, new FileInfo(file.FullName).Length);
+                    filesInfo.Add(new FileInfo() { Name = file.Name, Size = new System.IO.FileInfo(file.FullName).Length.ToString(), 
+                    Extension = file.Extension, IsDirectory = false});
                 }
             }
+            var sortedFilesInfo = filesInfo.OrderBy(x => long.Parse(x.Size)).ToList();
 
-            var sortedDict = filesInfo.OrderBy(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
-            return sortedDict;
+            foreach(var sortFileInfo in sortedFilesInfo)
+            {
+                sortFileInfo.Size = _diskSpaceProc.TranformFromBytes(long.Parse(sortFileInfo.Size));
+            }
+
+            return sortedFilesInfo;
         }
 
         private long SumSizeDirectories(DirectoryInfo[] dirs)
@@ -47,7 +60,7 @@ namespace Logic.Repository
                 {
                     foreach (var file in filesInDir)
                     {
-                        sum += new FileInfo(file.FullName).Length;
+                        sum += new System.IO.FileInfo(file.FullName).Length;
                     }
 
                     sum += SumSizeDirectories(dirsInDir); 
@@ -57,7 +70,7 @@ namespace Logic.Repository
                 {
                     foreach (var file in filesInDir)
                     {
-                        sum += new FileInfo(file.FullName).Length;
+                        sum += new System.IO.FileInfo(file.FullName).Length;
                     }
                 }
             }

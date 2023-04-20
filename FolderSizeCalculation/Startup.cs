@@ -1,4 +1,5 @@
 using Logic.Interfaces;
+using Logic.Processor;
 using Logic.Repository;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -28,7 +29,8 @@ namespace FolderSizeCalculation
         {
             services.AddControllers();
 
-            services.AddScoped<IDiskSpace, DiskSpaceRepository>();
+            services.AddScoped<IDiskSpaceRepository, DiskSpaceRepository>();
+            services.AddScoped<IDiskSpaceProcessor, DiskSpaceProcessor>();
 
             services.AddSwaggerGen(c =>
             {

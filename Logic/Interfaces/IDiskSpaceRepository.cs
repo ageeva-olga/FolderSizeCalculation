@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Logic.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,8 +7,8 @@ using System.Threading.Tasks;
 
 namespace Logic.Interfaces
 {
-    public interface IDiskSpace
+    public interface IDiskSpaceRepository
     {
-        public Dictionary<string, long> GetFiles(string path);
+        public List<FileInfo> GetFiles(string path);
     }
 }
