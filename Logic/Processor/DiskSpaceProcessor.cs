@@ -5,11 +5,63 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FileInfo = Logic.Models.FileInfo;
 
 namespace Logic.Processor
 {
     public class DiskSpaceProcessor : IDiskSpaceProcessor
     {
+        private IDiskSpaceRepository _diskSpaceRepo;
+
+        public DiskSpaceProcessor(IDiskSpaceRepository diskSpaceRepo)
+        {
+            _diskSpaceRepo = diskSpaceRepo;
+        }
+
+        public List<FileInfo> GetFiles(string path)
+        {
+            var filesInfo = new List<FileInfo>();
+
+            var dirs = _diskSpaceRepo.GetDirectories(path);
+            var files = _diskSpaceRepo.GetFiles(path);
+
+            if(dirs != null)
+            {
+                foreach (var dir in dirs)
+                {
+                    filesInfo.Add(new FileInfo()
+                    {
+                        Name = dir.Name,
+                        Size = SumSizeDirectories(new DirectoryInfo[] { dir }).ToString(),
+                        IsDirectory = true
+                    });
+                }
+            }
+            
+            if(files != null)
+            {
+                foreach (var file in files)
+                {
+                    filesInfo.Add(new FileInfo()
+                    {
+                        Name = file.Name,
+                        Size = new System.IO.FileInfo(file.FullName).Length.ToString(),
+                        Extension = file.Extension,
+                        IsDirectory = false
+                    });
+                }
+            }
+            
+            var sortedFilesInfo = filesInfo.OrderBy(x => long.Parse(x.Size)).ToList();
+
+            foreach (var sortFileInfo in sortedFilesInfo)
+            {
+                sortFileInfo.Size = TranformFromBytes(long.Parse(sortFileInfo.Size));
+            }
+
+            return sortedFilesInfo;
+        }
+         
         public long SumSizeDirectories(DirectoryInfo[] dirs)
         {
             long sum = 0;
@@ -23,7 +75,7 @@ namespace Logic.Processor
                 {
                     foreach (var file in filesInDir)
                     {
-                        sum += new FileInfo(file.FullName).Length;
+                        sum += new System.IO.FileInfo(file.FullName).Length;
                     }
 
                     sum += SumSizeDirectories(dirsInDir);
@@ -33,7 +85,7 @@ namespace Logic.Processor
                 {
                     foreach (var file in filesInDir)
                     {
-                        sum += new FileInfo(file.FullName).Length;
+                        sum += new System.IO.FileInfo(file.FullName).Length;
                     }
                 }
             }
@@ -58,7 +110,7 @@ namespace Logic.Processor
             }
             else
             {
-                transformSize = ((double)size / 1000000000).ToString() + "b";
+                transformSize = ((double)size / 1000000000).ToString() + "Gb";
             }
             return transformSize;
         }

@@ -12,6 +12,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using NLog.Extensions.Logging;
+using NLog.Web;
 
 namespace FolderSizeCalculation
 {
@@ -31,6 +34,16 @@ namespace FolderSizeCalculation
 
             services.AddScoped<IDiskSpaceRepository, DiskSpaceRepository>();
             services.AddScoped<IDiskSpaceProcessor, DiskSpaceProcessor>();
+
+            services.AddLogging();
+            var provider = services.BuildServiceProvider();
+
+            var factory = provider.GetService<ILoggerFactory>();
+            factory.AddNLog();
+            factory.ConfigureNLog("nlog.config");
+
+            var logger = provider.GetService<ILogger<Program>>();
+            services.AddSingleton<Microsoft.Extensions.Logging.ILogger>(_ => logger);
 
             services.AddSwaggerGen(c =>
             {

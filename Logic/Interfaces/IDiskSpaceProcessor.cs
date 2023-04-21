@@ -11,5 +11,6 @@ namespace Logic.Interfaces
     {
         public long SumSizeDirectories(DirectoryInfo[] dirs);
         public string TranformFromBytes(long size);
+        public List<Models.FileInfo> GetFiles(string path);
     }
 }

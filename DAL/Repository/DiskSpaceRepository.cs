@@ -5,77 +5,55 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using FileInfo = Logic.Models.FileInfo;
+using Microsoft.Extensions.Logging;
 
 namespace Logic.Repository
 {
     public class DiskSpaceRepository : IDiskSpaceRepository
     {
-        private IDiskSpaceProcessor _diskSpaceProc;
-        public DiskSpaceRepository(IDiskSpaceProcessor diskSpaceProc)
+        private ILogger _logger;
+        public DiskSpaceRepository(ILogger logger)
         {
-            _diskSpaceProc = diskSpaceProc;
+            _logger = logger;
         }
-        public List<FileInfo> GetFiles(string path)
-        {
-            var filesInfo = new List<FileInfo>();
 
+        public DirectoryInfo[] GetDirectories(string path)
+        {
+            DirectoryInfo[] dirs = null;
+            if(path == null)
+            {
+                var infoEx = String.Format("This path {0} is null.", path);
+                _logger.LogInformation(infoEx);
+            }
             if (Directory.Exists(path))
             {
-                var dirs = new DirectoryInfo(path).GetDirectories();
-                var files = new DirectoryInfo(path).GetFiles();
-
-                foreach (var dir in dirs)
-                {
-                    filesInfo.Add( new FileInfo() { Name = dir.Name, Size = _diskSpaceProc.SumSizeDirectories(new DirectoryInfo[] { dir }).ToString(),
-                    IsDirectory = true});
-                }
-
-                foreach (var file in files)
-                {
-                    filesInfo.Add(new FileInfo() { Name = file.Name, Size = new System.IO.FileInfo(file.FullName).Length.ToString(), 
-                    Extension = file.Extension, IsDirectory = false});
-                }
+                dirs = new DirectoryInfo(path).GetDirectories();
             }
-            var sortedFilesInfo = filesInfo.OrderBy(x => long.Parse(x.Size)).ToList();
-
-            foreach(var sortFileInfo in sortedFilesInfo)
+            else
             {
-                sortFileInfo.Size = _diskSpaceProc.TranformFromBytes(long.Parse(sortFileInfo.Size));
+                var infoEx = String.Format("This path {0} does not exist.", path);
+                _logger.LogInformation(infoEx);
             }
-
-            return sortedFilesInfo;
+            return dirs;
         }
-
-        private long SumSizeDirectories(DirectoryInfo[] dirs)
+        public FileInfo[] GetFiles(string path)
         {
-            long sum = 0;
-
-            foreach (var dir in dirs)
+            FileInfo[] files = null;
+            if (path == null)
             {
-                var dirsInDir = new DirectoryInfo(dir.FullName).GetDirectories();
-                var filesInDir = new DirectoryInfo(dir.FullName).GetFiles();
-
-                if(dirsInDir.Length != 0)
-                {
-                    foreach (var file in filesInDir)
-                    {
-                        sum += new System.IO.FileInfo(file.FullName).Length;
-                    }
-
-                    sum += SumSizeDirectories(dirsInDir); 
-                }
-
-                else
-                {
-                    foreach (var file in filesInDir)
-                    {
-                        sum += new System.IO.FileInfo(file.FullName).Length;
-                    }
-                }
+                var infoEx = String.Format("This path {0} is null.", path);
+                _logger.LogInformation(infoEx);
             }
-
-            return sum;
+            if (Directory.Exists(path))
+            {
+                files = new DirectoryInfo(path).GetFiles();
+            }
+            else
+            {
+                var infoEx = String.Format("This path {0} does not exist.", path);
+                _logger.LogInformation(infoEx);
+            }
+            return files;
         }
     }
 }

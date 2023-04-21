@@ -12,16 +12,16 @@ namespace FolderSizeCalculation.Controllers
     [ApiController]
     public class DiskSpaceController : Controller
     {
-        private IDiskSpaceRepository _diskSpace;
-        public DiskSpaceController(IDiskSpaceRepository diskSpace)
+        private IDiskSpaceProcessor _diskSpaceProc;
+        public DiskSpaceController(IDiskSpaceProcessor diskSpaceProc)
         {
-            _diskSpace = diskSpace;
+            _diskSpaceProc = diskSpaceProc;
         }
 
         [HttpGet("{path}")]
         public List<FileInfo> GetFiles(string path)
         {
-            var info = _diskSpace.GetFiles(path);
+            var info = _diskSpaceProc.GetFiles(path);
             return info;
         }
     }
