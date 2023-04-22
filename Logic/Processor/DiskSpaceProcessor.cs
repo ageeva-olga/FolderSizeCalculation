@@ -6,26 +6,55 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FileInfo = Logic.Models.FileInfo;
+using Microsoft.Extensions.Logging;
+using System.Net;
 
 namespace Logic.Processor
 {
     public class DiskSpaceProcessor : IDiskSpaceProcessor
     {
         private IDiskSpaceRepository _diskSpaceRepo;
+        private ILogger _logger;
 
-        public DiskSpaceProcessor(IDiskSpaceRepository diskSpaceRepo)
+        public DiskSpaceProcessor(IDiskSpaceRepository diskSpaceRepo, ILogger logger)
         {
             _diskSpaceRepo = diskSpaceRepo;
+            _logger = logger;
         }
 
         public List<FileInfo> GetFiles(string path)
         {
+            if (path == null)
+            {
+                var infoEx = $"This path {path} is null.";
+                _logger.LogError(infoEx);
+                throw new ArgumentNullException("path", infoEx);
+            }
+
             var filesInfo = new List<FileInfo>();
+            DirectoryInfo[] dirs = null;
+            try
+            {
+                dirs = _diskSpaceRepo.GetDirectories(path);
+            }
+            catch (FileNotFoundException e)
+            {
+                _logger.LogError(e, e.Message);
+                throw;
+            }
 
-            var dirs = _diskSpaceRepo.GetDirectories(path);
-            var files = _diskSpaceRepo.GetFiles(path);
+            System.IO.FileInfo[] files = null;
+            try
+            {
+                files = _diskSpaceRepo.GetFiles(path);
+            }
+            catch (FileNotFoundException e)
+            {
+                _logger.LogError(e, e.Message);
+                throw;
+            }
 
-            if(dirs != null)
+            if (dirs != null)
             {
                 foreach (var dir in dirs)
                 {
@@ -62,7 +91,7 @@ namespace Logic.Processor
             return sortedFilesInfo;
         }
          
-        public long SumSizeDirectories(DirectoryInfo[] dirs)
+        private long SumSizeDirectories(DirectoryInfo[] dirs)
         {
             long sum = 0;
 
@@ -93,7 +122,7 @@ namespace Logic.Processor
             return sum;
         }
 
-        public string TranformFromBytes(long size)
+        private string TranformFromBytes(long size)
         {
             string transformSize = "";
             if(size < 1000)

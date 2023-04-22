@@ -6,52 +6,36 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using System.Net;
 
 namespace Logic.Repository
 {
     public class DiskSpaceRepository : IDiskSpaceRepository
     {
-        private ILogger _logger;
-        public DiskSpaceRepository(ILogger logger)
-        {
-            _logger = logger;
-        }
-
         public DirectoryInfo[] GetDirectories(string path)
         {
             DirectoryInfo[] dirs = null;
-            if(path == null)
-            {
-                var infoEx = String.Format("This path {0} is null.", path);
-                _logger.LogInformation(infoEx);
-            }
+            
             if (Directory.Exists(path))
             {
                 dirs = new DirectoryInfo(path).GetDirectories();
             }
             else
             {
-                var infoEx = String.Format("This path {0} does not exist.", path);
-                _logger.LogInformation(infoEx);
+                throw new FileNotFoundException($"This path {path} does not exist for getting directories.");
             }
             return dirs;
         }
         public FileInfo[] GetFiles(string path)
         {
             FileInfo[] files = null;
-            if (path == null)
-            {
-                var infoEx = String.Format("This path {0} is null.", path);
-                _logger.LogInformation(infoEx);
-            }
             if (Directory.Exists(path))
             {
                 files = new DirectoryInfo(path).GetFiles();
             }
             else
             {
-                var infoEx = String.Format("This path {0} does not exist.", path);
-                _logger.LogInformation(infoEx);
+                throw new FileNotFoundException($"This path {path} does not exist for getting files.");
             }
             return files;
         }

@@ -9,8 +9,6 @@ namespace Logic.Interfaces
 {
     public interface IDiskSpaceProcessor
     {
-        public long SumSizeDirectories(DirectoryInfo[] dirs);
-        public string TranformFromBytes(long size);
         public List<Models.FileInfo> GetFiles(string path);
     }
 }
