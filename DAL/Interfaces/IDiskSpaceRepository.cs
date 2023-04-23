@@ -1,15 +1,16 @@
-﻿using System;
+﻿using DAL.DTO;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Logic.Interfaces
+namespace DAL.Interfaces
 {
     public interface IDiskSpaceRepository
     {
-        public DirectoryInfo[] GetDirectories(string path);
-        public FileInfo[] GetFiles(string path);
+        public DirectoryInfoDTO[] GetDirectories(string path);
+        public FileInfoDTO[] GetFiles(string path);
     }
 }

@@ -9,6 +9,6 @@ namespace Logic.Interfaces
 {
     public interface IDiskSpaceProcessor
     {
-        public List<Models.FileInfo> GetFiles(string path);
+        public List<Models.DirectoryInfoModel> GetDirectoryInfo(string path);
     }
 }

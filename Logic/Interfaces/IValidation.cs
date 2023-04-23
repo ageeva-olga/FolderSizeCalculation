@@ -8,6 +8,7 @@ namespace Logic.Interfaces
 {
     public interface IValidation
     {
-        public string ValidateNotNull(string path);
+        public bool Validate(string path);
+        public List<string> GetErrors();
     }
 }

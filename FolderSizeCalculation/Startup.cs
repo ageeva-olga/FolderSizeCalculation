@@ -1,6 +1,5 @@
 using Logic.Interfaces;
 using Logic.Processor;
-using Logic.Repository;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -16,6 +15,8 @@ using Microsoft.Extensions.Logging;
 using NLog.Extensions.Logging;
 using NLog.Web;
 using Logic;
+using DAL.Interfaces;
+using DAL.Repository;
 
 namespace FolderSizeCalculation
 {

@@ -9,16 +9,25 @@ namespace Logic
 {
     public class Validation : IValidation
     {
-        public string ValidateNotNull(string path)
+        private List<string> _errors;
+
+        public Validation()
         {
-            if (path == null)
+            _errors = new List<string>();
+        }
+
+        public List<string> GetErrors()
+        {
+            return _errors;
+        }
+
+        public bool Validate(string path)
+        {           
+            if (string.IsNullOrEmpty(path))
             {
-                throw new ArgumentNullException($"This path {path} is null.");
+                _errors.Add($"This path {path} is null.");
             }
-            else
-            {
-                return path;
-            }
+            return !_errors.Any();
         }
     }
 }

@@ -25,7 +25,7 @@ namespace FolderSizeCalculation.Controllers
         {           
             try
             {
-                var info = _diskSpaceProc.GetFiles(path);
+                var info = _diskSpaceProc.GetDirectoryInfo(path);
                 return Ok(info);
             }
 

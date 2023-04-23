@@ -1,5 +1,4 @@
-﻿using Logic.Interfaces;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,18 +6,22 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using System.Net;
+using DAL.DTO;
+using DAL.Interfaces;
 
-namespace Logic.Repository
+namespace DAL.Repository
 {
     public class DiskSpaceRepository : IDiskSpaceRepository
     {
-        public DirectoryInfo[] GetDirectories(string path)
+        public DirectoryInfoDTO[] GetDirectories(string path)
         {
-            DirectoryInfo[] dirs = null;
+            DirectoryInfoDTO[] dirs = null;
             
             if (Directory.Exists(path))
             {
-                dirs = new DirectoryInfo(path).GetDirectories();
+                var dirsIO = new DirectoryInfo(path).GetDirectories();
+
+                dirs = dirsIO.Select(x => new DirectoryInfoDTO() { Path = x.FullName, DirectoryName = x.Name }).ToArray();
             }
             else
             {
@@ -26,12 +29,13 @@ namespace Logic.Repository
             }
             return dirs;
         }
-        public FileInfo[] GetFiles(string path)
+        public FileInfoDTO[] GetFiles(string path)
         {
-            FileInfo[] files = null;
+            FileInfoDTO[] files = null;
             if (Directory.Exists(path))
             {
-                files = new DirectoryInfo(path).GetFiles();
+                var filesIO = new DirectoryInfo(path).GetFiles();
+                files = filesIO.Select(x => new FileInfoDTO() { Name = x.Name, Size = x.Length.ToString(), Extension = x.Extension }).ToArray();
             }
             else
             {
