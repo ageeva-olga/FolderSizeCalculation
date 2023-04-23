@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace Logic.Interfaces
 {
-    public interface IDiskSpace
+    public interface IValidation
     {
-        public Dictionary<string, long> GetFiles(string path);
+        public bool Validate(string path);
+        public List<string> GetErrors();
     }
 }

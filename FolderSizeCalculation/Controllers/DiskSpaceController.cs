@@ -1,7 +1,10 @@
 ﻿using Logic.Interfaces;
+using Logic.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -11,18 +14,29 @@ namespace FolderSizeCalculation.Controllers
     [ApiController]
     public class DiskSpaceController : Controller
     {
-        private IDiskSpace _diskSpace;
-        public DiskSpaceController(IDiskSpace diskSpace)
+        private IDiskSpaceProcessor _diskSpaceProc;
+        public DiskSpaceController(IDiskSpaceProcessor diskSpaceProc)
         {
-            _diskSpace = diskSpace;
+            _diskSpaceProc = diskSpaceProc;
         }
 
         [HttpGet("{path}")]
-        public Dictionary<string, long> GetFiles(string path)
-        {
-            var info = _diskSpace.GetFiles(path);
-            return info;
-            //return Ok();
+        public IActionResult GetFiles(string path)
+        {           
+            try
+            {
+                var info = _diskSpaceProc.GetDirectoryInfo(path);
+                return Ok(info);
+            }
+
+            catch (FileNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch(ArgumentNullException argNull)
+            {
+                return StatusCode(StatusCodes.Status400BadRequest, argNull.Message);
+            }
         }
     }
 }

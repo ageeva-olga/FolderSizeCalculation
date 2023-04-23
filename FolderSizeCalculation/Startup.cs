@@ -1,5 +1,5 @@
 using Logic.Interfaces;
-using Logic.Repository;
+using Logic.Processor;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -11,6 +11,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using NLog.Extensions.Logging;
+using NLog.Web;
+using Logic;
+using DAL.Interfaces;
+using DAL.Repository;
 
 namespace FolderSizeCalculation
 {
@@ -28,7 +34,19 @@ namespace FolderSizeCalculation
         {
             services.AddControllers();
 
-            services.AddScoped<IDiskSpace, DiskSpaceRepository>();
+            services.AddScoped<IValidation, Validation>();
+            services.AddScoped<IDiskSpaceRepository, DiskSpaceRepository>();
+            services.AddScoped<IDiskSpaceProcessor, DiskSpaceProcessor>();
+
+            services.AddLogging();
+            var provider = services.BuildServiceProvider();
+
+            var factory = provider.GetService<ILoggerFactory>();
+            factory.AddNLog();
+            factory.ConfigureNLog("nlog.config");
+
+            var logger = provider.GetService<ILogger<Program>>();
+            services.AddSingleton<Microsoft.Extensions.Logging.ILogger>(_ => logger);
 
             services.AddSwaggerGen(c =>
             {
