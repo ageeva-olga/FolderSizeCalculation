@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NLog.Extensions.Logging;
 using NLog.Web;
+using Logic;
 
 namespace FolderSizeCalculation
 {
@@ -32,6 +33,7 @@ namespace FolderSizeCalculation
         {
             services.AddControllers();
 
+            services.AddScoped<IValidation, Validation>();
             services.AddScoped<IDiskSpaceRepository, DiskSpaceRepository>();
             services.AddScoped<IDiskSpaceProcessor, DiskSpaceProcessor>();
 

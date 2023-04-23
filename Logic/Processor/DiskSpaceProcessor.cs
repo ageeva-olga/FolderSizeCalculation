@@ -13,22 +13,27 @@ namespace Logic.Processor
 {
     public class DiskSpaceProcessor : IDiskSpaceProcessor
     {
+        private IValidation _validat;
         private IDiskSpaceRepository _diskSpaceRepo;
         private ILogger _logger;
 
-        public DiskSpaceProcessor(IDiskSpaceRepository diskSpaceRepo, ILogger logger)
+        public DiskSpaceProcessor(IDiskSpaceRepository diskSpaceRepo, ILogger logger, IValidation validat)
         {
+            _validat = validat;
             _diskSpaceRepo = diskSpaceRepo;
             _logger = logger;
         }
 
         public List<FileInfo> GetFiles(string path)
         {
-            if (path == null)
+            try
             {
-                var infoEx = $"This path {path} is null.";
-                _logger.LogError(infoEx);
-                throw new ArgumentNullException("path", infoEx);
+                path = _validat.ValidateNotNull(path);
+            }
+            catch (ArgumentNullException ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                throw;
             }
 
             var filesInfo = new List<FileInfo>();
@@ -37,9 +42,9 @@ namespace Logic.Processor
             {
                 dirs = _diskSpaceRepo.GetDirectories(path);
             }
-            catch (FileNotFoundException e)
+            catch (FileNotFoundException ex)
             {
-                _logger.LogError(e, e.Message);
+                _logger.LogError(ex, ex.Message);
                 throw;
             }
 
@@ -48,26 +53,29 @@ namespace Logic.Processor
             {
                 files = _diskSpaceRepo.GetFiles(path);
             }
-            catch (FileNotFoundException e)
+            catch (FileNotFoundException ex)
             {
-                _logger.LogError(e, e.Message);
+                _logger.LogError(ex, ex.Message);
                 throw;
             }
 
-            if (dirs != null)
+            AddDirectories(filesInfo, dirs);
+
+            AddFiles(filesInfo, files);
+
+            var sortedFilesInfo = filesInfo.OrderBy(x => long.Parse(x.Size)).ToList();
+
+            foreach (var sortFileInfo in sortedFilesInfo)
             {
-                foreach (var dir in dirs)
-                {
-                    filesInfo.Add(new FileInfo()
-                    {
-                        Name = dir.Name,
-                        Size = SumSizeDirectories(new DirectoryInfo[] { dir }).ToString(),
-                        IsDirectory = true
-                    });
-                }
+                sortFileInfo.Size = TranformFromBytes(long.Parse(sortFileInfo.Size));
             }
-            
-            if(files != null)
+
+            return sortedFilesInfo;
+        }
+
+        private static void AddFiles(List<FileInfo> filesInfo, System.IO.FileInfo[] files)
+        {
+            if (files != null)
             {
                 foreach (var file in files)
                 {
@@ -80,17 +88,24 @@ namespace Logic.Processor
                     });
                 }
             }
-            
-            var sortedFilesInfo = filesInfo.OrderBy(x => long.Parse(x.Size)).ToList();
-
-            foreach (var sortFileInfo in sortedFilesInfo)
-            {
-                sortFileInfo.Size = TranformFromBytes(long.Parse(sortFileInfo.Size));
-            }
-
-            return sortedFilesInfo;
         }
-         
+
+        private void AddDirectories(List<FileInfo> filesInfo, DirectoryInfo[] dirs)
+        {
+            if (dirs != null)
+            {
+                foreach (var dir in dirs)
+                {
+                    filesInfo.Add(new FileInfo()
+                    {
+                        Name = dir.Name,
+                        Size = SumSizeDirectories(new DirectoryInfo[] { dir }).ToString(),
+                        IsDirectory = true
+                    });
+                }
+            }
+        }
+
         private long SumSizeDirectories(DirectoryInfo[] dirs)
         {
             long sum = 0;
