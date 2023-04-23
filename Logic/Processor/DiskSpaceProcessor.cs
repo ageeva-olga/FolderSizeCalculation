@@ -167,24 +167,16 @@ namespace Logic.Processor
 
         private string TranformFromBytes(long size)
         {
-            string transformSize = "";
-            if(size < 1000)
+            var nameDimension = new string[] { "Byte" , "Kb" , "Mb" , "Gb" };
+            var count = 0;
+            var doubleSize = (double)size;
+
+            while (doubleSize >= 1000 && count < 3)
             {
-                transformSize = size.ToString() + "Byte";
+                doubleSize = doubleSize / 1000;
+                count++;
             }
-            else if (1000 <= size && size < 1000000)
-            {
-                transformSize = ((double)size /1000).ToString() + "Kb";
-            }
-            else if (1000000 <= size && size < 1000000000)
-            {
-                transformSize = ((double)size / 1000000).ToString() + "Mb";
-            }
-            else
-            {
-                transformSize = ((double)size / 1000000000).ToString() + "Gb";
-            }
-            return transformSize;
+            return doubleSize.ToString() + nameDimension[count];
         }
     }
 }
