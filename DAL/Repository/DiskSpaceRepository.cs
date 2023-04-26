@@ -13,16 +13,16 @@ namespace DAL.Repository
 {
     public class DiskSpaceRepository : IDiskSpaceRepository
     {
-        public DirectoryInfoDTO[] GetDirectories(string path)
+        public List<DirectoryInfoDTO> GetDirectories(string path)
         {
-            DirectoryInfoDTO[] dirs = null;
+            var dirs = new List<DirectoryInfoDTO>();
             
             if (Directory.Exists(path))
             {
                 var dirsIO = new DirectoryInfo(path).GetDirectories();
 
                 dirs = dirsIO.Select(x => new DirectoryInfoDTO() { Path = x.FullName, 
-                    DirectoryName = x.Name }).ToArray();
+                    DirectoryName = x.Name }).ToList();
             }
             else
             {
@@ -30,14 +30,14 @@ namespace DAL.Repository
             }
             return dirs;
         }
-        public FileInfoDTO[] GetFiles(string path)
+        public List<FileInfoDTO> GetFiles(string path)
         {
-            FileInfoDTO[] files = null;
+            var files = new List<FileInfoDTO>();
             if (Directory.Exists(path))
             {
                 var filesIO = new DirectoryInfo(path).GetFiles();
                 files = filesIO.Select(x => new FileInfoDTO() { Name = x.Name, Size = x.Length.ToString(),
-                    BytesSize = x.Length, Extension = x.Extension }).ToArray();
+                    BytesSize = x.Length, Extension = x.Extension }).ToList();
             }
             else
             {

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Logic.Models;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,6 +10,6 @@ namespace Logic.Interfaces
 {
     public interface IDiskSpaceProcessor
     {
-        public List<Models.DirectoryInfoModel> GetDirectoryInfo(string path, bool isAscending);
+        public List<DirectoryInfoModel> GetDirectoryInfo(string path, bool isAscending);
     }
 }

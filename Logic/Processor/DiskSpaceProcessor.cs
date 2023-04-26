@@ -39,7 +39,7 @@ namespace Logic.Processor
             }
 
 
-            DirectoryInfoDTO[] dirs = null;
+            var dirs = new List<DirectoryInfoDTO>() { };
             try
             {
                 dirs = _diskSpaceRepo.GetDirectories(path);
@@ -50,7 +50,7 @@ namespace Logic.Processor
                 throw;
             }
 
-            FileInfoDTO[] files = null;
+            var files = new List<FileInfoDTO>() { };
             try
             {
                 files = _diskSpaceRepo.GetFiles(path);
@@ -62,40 +62,40 @@ namespace Logic.Processor
             }
 
             var directoriesInfo = AddDirectories(dirs);
-            var sortedDirectoriesInfo = SortFileInfo(directoriesInfo, isAscending);
+            var sortedDirectoriesInfo = SortDirectoryInfoModel(directoriesInfo, isAscending);
 
             var filesInfo = AddFiles(files);
-            var sortedFilesInfo = SortFileInfo(filesInfo, isAscending);
+            var sortedFilesInfo = SortDirectoryInfoModel(filesInfo, isAscending);
 
 
 
             return sortedDirectoriesInfo.Concat(sortedFilesInfo).ToList();
         }
 
-        private List<DirectoryInfoModel> SortFileInfo(List<DirectoryInfoModel> filesInfo, bool ascending)
+        private List<DirectoryInfoModel> SortDirectoryInfoModel(List<DirectoryInfoModel> filesInfo, bool ascending)
         {
-            var sortedFilesInfo = new List<DirectoryInfoModel>();
+            var sortedFilesInfo = new List<DirectoryInfoModel>() { };
             if (ascending)
             {
-                sortedFilesInfo = filesInfo.OrderBy(x => long.Parse(x.Size)).ToList();
+                sortedFilesInfo = filesInfo.OrderBy(x => x.BytesSize).ToList();
             }
             else
             {
-                sortedFilesInfo = filesInfo.OrderByDescending(x => long.Parse(x.Size)).ToList();
+                sortedFilesInfo = filesInfo.OrderByDescending(x => x.BytesSize).ToList();
             }
             
 
             foreach (var sortFileInfo in sortedFilesInfo)
             {
-                sortFileInfo.Size = TranformFromBytes(long.Parse(sortFileInfo.Size));
+                sortFileInfo.Size = TranformFromBytes(sortFileInfo.BytesSize);
             }
 
             return sortedFilesInfo;
         }
 
-        private static List<DirectoryInfoModel> AddFiles(FileInfoDTO[] files)
+        private static List<DirectoryInfoModel> AddFiles(List<FileInfoDTO> files)
         {
-            var filesInfo = new List<DirectoryInfoModel>();
+            var filesInfo = new List<DirectoryInfoModel>() { };
 
             if (files != null)
             {
@@ -115,15 +115,15 @@ namespace Logic.Processor
             return filesInfo;
         }
 
-        private List<DirectoryInfoModel> AddDirectories(DirectoryInfoDTO[] dirs)
+        private List<DirectoryInfoModel> AddDirectories(List<DirectoryInfoDTO> dirs)
         {
-            var directoriesInfo = new List<DirectoryInfoModel>();
+            var directoriesInfo = new List<DirectoryInfoModel>() { };
 
             if (dirs != null)
             {
                 foreach (var dir in dirs)
                 {
-                    var size = SumSizeDirectories(new DirectoryInfoDTO[] { dir });
+                    var size = SumSizeDirectories(new List<DirectoryInfoDTO> { dir });
                     directoriesInfo.Add(new DirectoryInfoModel()
                     {
                         Name = dir.DirectoryName,
@@ -137,13 +137,13 @@ namespace Logic.Processor
             return directoriesInfo;
         }
 
-        private long SumSizeDirectories(DirectoryInfoDTO[] dirs)
+        private long SumSizeDirectories(List<DirectoryInfoDTO> dirs)
         {
             long sum = 0;
 
             foreach (var dir in dirs)
             {
-                DirectoryInfoDTO[] dirsInDirDTO = null;
+                var dirsInDirDTO = new List<DirectoryInfoDTO>() { };
                 try
                 {
                     dirsInDirDTO = _diskSpaceRepo.GetDirectories(dir.Path);
@@ -154,7 +154,7 @@ namespace Logic.Processor
                     throw;
                 }
 
-                FileInfoDTO[] filesInDirDTO = null;
+                var filesInDirDTO = new List<FileInfoDTO>() { };
                 try
                 {
                     filesInDirDTO = _diskSpaceRepo.GetFiles(dir.Path);
@@ -165,7 +165,7 @@ namespace Logic.Processor
                     throw;
                 }
 
-                if (dirsInDirDTO.Length != 0)
+                if (dirsInDirDTO != null)
                 {
                     foreach (var file in filesInDirDTO)
                     {
@@ -175,7 +175,7 @@ namespace Logic.Processor
                     sum += SumSizeDirectories(dirsInDirDTO);
                 }
 
-                else
+                else if(filesInDirDTO != null)
                 {
                     foreach (var file in filesInDirDTO)
                     {
@@ -189,15 +189,17 @@ namespace Logic.Processor
 
         private string TranformFromBytes(long size)
         {
-            var nameDimension = new string[] { "Byte" , "Kb" , "Mb" , "Gb" };
+            var nameDimension = new string[] { "Byte", "Kb", "Mb", "Gb" };
             var count = 0;
+            var doubleSize = (double)size;
 
-            while (size >= 1000 && count < 3)
+            while (doubleSize >= 1000 && count < 3)
             {
-                size = size / (long)1000;
+                doubleSize = doubleSize / 1000;
                 count++;
             }
-            return size.ToString() + nameDimension[count];
+
+            return Math.Round(doubleSize,2).ToString() + nameDimension[count];
         }
     }
 }

@@ -39,8 +39,8 @@ namespace UnitTests
         {
             var loggerMock = new Mock<ILogger>();
             var diskSpaceRepo = new Mock<IDiskSpaceRepository>();
-            diskSpaceRepo.Setup(x => x.GetDirectories(path)).Returns(new DirectoryInfoDTO[] { dir1 });
-            diskSpaceRepo.Setup(x => x.GetFiles(path)).Returns(new FileInfoDTO[] { file1, file2, file3, file4 });
+            diskSpaceRepo.Setup(x => x.GetDirectories(path)).Returns(new List<DirectoryInfoDTO>() { dir1 });
+            diskSpaceRepo.Setup(x => x.GetFiles(path)).Returns(new List<FileInfoDTO>() { file1, file2, file3, file4 });
             var validator = new Mock<IValidation>();
             validator.Setup(x => x.Validate(path)).Returns(true);
 
@@ -53,8 +53,8 @@ namespace UnitTests
         {
             var loggerMock = new Mock<ILogger>();
             var diskSpaceRepo = new Mock<IDiskSpaceRepository>();
-            diskSpaceRepo.Setup(x => x.GetDirectories(path)).Returns(new DirectoryInfoDTO[] { dir1 });
-            diskSpaceRepo.Setup(x => x.GetFiles(path)).Returns(new FileInfoDTO[] { file1, file2, file3, file4 });
+            diskSpaceRepo.Setup(x => x.GetDirectories(path)).Returns(new List<DirectoryInfoDTO>() { dir1 });
+            diskSpaceRepo.Setup(x => x.GetFiles(path)).Returns(new List<FileInfoDTO>() { file1, file2, file3, file4 });
             var validator = new Mock<IValidation>();
             validator.Setup(x => x.Validate(path)).Returns(true);
 
@@ -67,10 +67,10 @@ namespace UnitTests
         {
             var loggerMock = new Mock<ILogger>();
             var diskSpaceRepo = new Mock<IDiskSpaceRepository>();
-            diskSpaceRepo.Setup(x => x.GetDirectories(path)).Returns(new DirectoryInfoDTO[] { dir1, dir3 });
-            diskSpaceRepo.Setup(x => x.GetDirectories(dir1.Path)).Returns(new DirectoryInfoDTO[] { dir2 });
-            diskSpaceRepo.Setup(x => x.GetFiles(path)).Returns(new FileInfoDTO[] { file1, file4, file3 });
-            diskSpaceRepo.Setup(x => x.GetFiles(dir1.Path)).Returns(new FileInfoDTO[] { file2, file3 });
+            diskSpaceRepo.Setup(x => x.GetDirectories(path)).Returns(new List<DirectoryInfoDTO>() { dir1, dir3 });
+            diskSpaceRepo.Setup(x => x.GetDirectories(dir1.Path)).Returns(new List<DirectoryInfoDTO>() { dir2 });
+            diskSpaceRepo.Setup(x => x.GetFiles(path)).Returns(new List<FileInfoDTO>() { file1, file4, file3 });
+            diskSpaceRepo.Setup(x => x.GetFiles(dir1.Path)).Returns(new List<FileInfoDTO>() { file2, file3 });
             var validator = new Mock<IValidation>();
             validator.Setup(x => x.Validate(path)).Returns(true);
 
@@ -134,7 +134,7 @@ namespace UnitTests
             var getDirInfo = CompletionDiskSpaceProcessorForDir();
 
             Assert.AreEqual(dir1.DirectoryName, getDirInfo[1].Name);
-            Assert.AreEqual("1Kb", getDirInfo[1].Size);
+            Assert.AreEqual("1.1Kb", getDirInfo[1].Size);
         }
 
 
