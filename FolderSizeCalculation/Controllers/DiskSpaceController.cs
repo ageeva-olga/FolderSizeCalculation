@@ -21,7 +21,7 @@ namespace FolderSizeCalculation.Controllers
         }
 
         [HttpGet("{path}")]
-        public IActionResult GetFiles(string path, bool isAscending)
+        public IActionResult GetDirectoryInfo(string path, bool isAscending)
         {           
             try
             {

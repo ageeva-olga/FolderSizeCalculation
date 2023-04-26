@@ -27,7 +27,7 @@ namespace Logic.Processor
             _logger = logger;
         }
 
-        public List<DirectoryInfoModel> GetDirectoryInfo(string path, bool isAscending)
+        public DirectoryInfoModel GetDirectoryInfo(string path, bool isAscending)
         {
             if (!_validator.Validate(path))
             {
@@ -38,76 +38,56 @@ namespace Logic.Processor
 
             }
 
+            List<DirectoryInfoDTO> dirs = GetDirectories(path);
+            List<FileInfoDTO> files = GetFiles(path);
 
-            var dirs = new List<DirectoryInfoDTO>() { };
-            try
+            var directoryModels = new List<DirectoryModel>();
+            directoryModels = ProcessDirectories(dirs);
+
+            var fileModels = new List<FileModel>();
+            fileModels = ProcessFiles(files);
+
+            if (isAscending)
             {
-                dirs = _diskSpaceRepo.GetDirectories(path);
-            }
-            catch (FileNotFoundException ex)
-            {
-                _logger.LogError(ex, ex.Message);
-                throw;
-            }
-
-            var files = new List<FileInfoDTO>() { };
-            try
-            {
-                files = _diskSpaceRepo.GetFiles(path);
-            }
-            catch (FileNotFoundException ex)
-            {
-                _logger.LogError(ex, ex.Message);
-                throw;
-            }
-
-            var directoriesInfo = AddDirectories(dirs);
-            var sortedDirectoriesInfo = SortDirectoryInfoModel(directoriesInfo, isAscending);
-
-            var filesInfo = AddFiles(files);
-            var sortedFilesInfo = SortDirectoryInfoModel(filesInfo, isAscending);
-
-
-
-            return sortedDirectoriesInfo.Concat(sortedFilesInfo).ToList();
-        }
-
-        private List<DirectoryInfoModel> SortDirectoryInfoModel(List<DirectoryInfoModel> filesInfo, bool ascending)
-        {
-            var sortedFilesInfo = new List<DirectoryInfoModel>() { };
-            if (ascending)
-            {
-                sortedFilesInfo = filesInfo.OrderBy(x => x.BytesSize).ToList();
+                directoryModels = directoryModels.OrderBy(x => x.BytesSize).ToList();
+                fileModels = fileModels.OrderBy(x => x.BytesSize).ToList();
             }
             else
             {
-                sortedFilesInfo = filesInfo.OrderByDescending(x => x.BytesSize).ToList();
+                directoryModels = directoryModels.OrderByDescending(x => x.BytesSize).ToList();
+                fileModels = fileModels.OrderByDescending(x => x.BytesSize).ToList();
             }
-            
 
-            foreach (var sortFileInfo in sortedFilesInfo)
+            foreach (var directoryModel in directoryModels)
             {
-                sortFileInfo.Size = TranformFromBytes(sortFileInfo.BytesSize);
+                directoryModel.Size = TranformFromBytes(directoryModel.BytesSize);
             }
 
-            return sortedFilesInfo;
+            foreach (var fileModel in fileModels)
+            {
+                fileModel.Size = TranformFromBytes(fileModel.BytesSize);
+            }
+
+            var directoryInfoModel = new DirectoryInfoModel() { DirectoryModel = directoryModels, 
+                FileModel = fileModels};
+
+            return directoryInfoModel;
         }
 
-        private static List<DirectoryInfoModel> AddFiles(List<FileInfoDTO> files)
+        private static List<FileModel> ProcessFiles(List<FileInfoDTO> files)
         {
-            var filesInfo = new List<DirectoryInfoModel>() { };
+            var filesInfo = new List<FileModel>() { };
 
             if (files != null)
             {
                 foreach (var file in files)
                 {
-                    filesInfo.Add(new DirectoryInfoModel()
+                    filesInfo.Add(new FileModel()
                     {
                         Name = file.Name,
-                        Size = file.Size,
+                        Size = file.BytesSize.ToString(),
                         BytesSize = file.BytesSize,
-                        Extension = file.Extension,
-                        IsDirectory = false
+                        Extension = file.Extension
                     });
                 }
             }
@@ -115,21 +95,20 @@ namespace Logic.Processor
             return filesInfo;
         }
 
-        private List<DirectoryInfoModel> AddDirectories(List<DirectoryInfoDTO> dirs)
+        private List<DirectoryModel> ProcessDirectories(List<DirectoryInfoDTO> dirs)
         {
-            var directoriesInfo = new List<DirectoryInfoModel>() { };
+            var directoriesInfo = new List<DirectoryModel>() { };
 
             if (dirs != null)
             {
                 foreach (var dir in dirs)
                 {
                     var size = SumSizeDirectories(new List<DirectoryInfoDTO> { dir });
-                    directoriesInfo.Add(new DirectoryInfoModel()
+                    directoriesInfo.Add(new DirectoryModel()
                     {
                         Name = dir.DirectoryName,
                         Size = size.ToString(),
-                        BytesSize = size,
-                        IsDirectory = true
+                        BytesSize = size
                     });
                 }
             }
@@ -143,48 +122,56 @@ namespace Logic.Processor
 
             foreach (var dir in dirs)
             {
-                var dirsInDirDTO = new List<DirectoryInfoDTO>() { };
-                try
-                {
-                    dirsInDirDTO = _diskSpaceRepo.GetDirectories(dir.Path);
-                }
-                catch (FileNotFoundException ex)
-                {
-                    _logger.LogError(ex, ex.Message);
-                    throw;
-                }
+                List<DirectoryInfoDTO> dirsInDirDTO = GetDirectories(dir.Path);
+                List<FileInfoDTO> filesInDirDTO = GetFiles(dir.Path);
 
-                var filesInDirDTO = new List<FileInfoDTO>() { };
-                try
+                if (dirsInDirDTO != null)
                 {
-                    filesInDirDTO = _diskSpaceRepo.GetFiles(dir.Path);
-                }
-                catch (FileNotFoundException ex)
-                {
-                    _logger.LogError(ex, ex.Message);
-                    throw;
+                    sum += SumSizeDirectories(dirsInDirDTO);
                 }
 
                 if (dirsInDirDTO != null)
                 {
                     foreach (var file in filesInDirDTO)
                     {
-                        sum += long.Parse(file.Size);
-                    }
-
-                    sum += SumSizeDirectories(dirsInDirDTO);
-                }
-
-                else if(filesInDirDTO != null)
-                {
-                    foreach (var file in filesInDirDTO)
-                    {
-                        sum += long.Parse(file.Size);
+                        sum += file.BytesSize;
                     }
                 }
             }
 
             return sum;
+        }
+
+        private List<DirectoryInfoDTO> GetDirectories(string path)
+        {
+            var dirsInDirDTO = new List<DirectoryInfoDTO>() { };
+            try
+            {
+                dirsInDirDTO = _diskSpaceRepo.GetDirectories(path);
+            }
+            catch (FileNotFoundException ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                throw;
+            }
+
+            return dirsInDirDTO;
+        }
+
+        private List<FileInfoDTO> GetFiles(string path)
+        {
+            var filesInDirDTO = new List<FileInfoDTO>() { };
+            try
+            {
+                filesInDirDTO = _diskSpaceRepo.GetFiles(path);
+            }
+            catch (FileNotFoundException ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                throw;
+            }
+
+            return filesInDirDTO;
         }
 
         private string TranformFromBytes(long size)

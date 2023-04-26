@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DAL.DTO
+namespace Logic.Models
 {
-    public class FileInfoDTO
+    public class DirectoryModel
     {
         public string Name { get; set; }
+        public string Size { get; set; }
         public long BytesSize { get; set; }
-        public string Extension { get; set; }
     }
 }

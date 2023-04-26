@@ -29,13 +29,13 @@ namespace UnitTests
             dir1 = new DirectoryInfoDTO() { Path = "D:\\Folder", DirectoryName = "Folder" };
             dir2 = new DirectoryInfoDTO() { Path = "D:\\Folder2", DirectoryName = "Folder2" };
             dir3 = new DirectoryInfoDTO() { Path = "D:\\Folder3", DirectoryName = "Folder3" };
-            file1 = new FileInfoDTO() { Name = "file1", Size = "3001200", BytesSize = 3001200, Extension = ".pdf" };
-            file2 = new FileInfoDTO() { Name = "file2", Size = "1000", BytesSize = 1000, Extension = ".pdf" };
-            file3 = new FileInfoDTO() { Name = "file3", Size = "100", BytesSize = 100, Extension = ".exe" };
-            file4 = new FileInfoDTO() { Name = "file4", Size = "1000000002", BytesSize = 1000000002, Extension = ".pdf" };
+            file1 = new FileInfoDTO() { Name = "file1", BytesSize = 3001200, Extension = ".pdf" };
+            file2 = new FileInfoDTO() { Name = "file2", BytesSize = 1000, Extension = ".pdf" };
+            file3 = new FileInfoDTO() { Name = "file3", BytesSize = 100, Extension = ".exe" };
+            file4 = new FileInfoDTO() { Name = "file4", BytesSize = 1000000002, Extension = ".pdf" };
         }
 
-        private List<DirectoryInfoModel> CompletionDiskSpaceProcessorAscending()
+        private DirectoryInfoModel CompletionDiskSpaceProcessorAscending()
         {
             var loggerMock = new Mock<ILogger>();
             var diskSpaceRepo = new Mock<IDiskSpaceRepository>();
@@ -49,7 +49,7 @@ namespace UnitTests
             return getDirInfo;
         }
 
-        private List<DirectoryInfoModel> CompletionDiskSpaceProcessorDescending()
+        private DirectoryInfoModel CompletionDiskSpaceProcessorDescending()
         {
             var loggerMock = new Mock<ILogger>();
             var diskSpaceRepo = new Mock<IDiskSpaceRepository>();
@@ -63,7 +63,7 @@ namespace UnitTests
             return getDirInfo;
         }
 
-        private List<DirectoryInfoModel> CompletionDiskSpaceProcessorForDir()
+        private DirectoryInfoModel CompletionDiskSpaceProcessorForDir()
         {
             var loggerMock = new Mock<ILogger>();
             var diskSpaceRepo = new Mock<IDiskSpaceRepository>();
@@ -84,11 +84,11 @@ namespace UnitTests
         {
             var getDirInfo = CompletionDiskSpaceProcessorAscending();
 
-            Assert.AreEqual(dir1.DirectoryName, getDirInfo[0].Name);
-            Assert.AreEqual(file3.Name, getDirInfo[1].Name);
-            Assert.AreEqual(file2.Name, getDirInfo[2].Name);
-            Assert.AreEqual(file1.Name, getDirInfo[3].Name);
-            Assert.AreEqual(file4.Name, getDirInfo[4].Name);
+            Assert.AreEqual(dir1.DirectoryName, getDirInfo.DirectoryModel[0].Name);
+            Assert.AreEqual(file3.Name, getDirInfo.FileModel[0].Name);
+            Assert.AreEqual(file2.Name, getDirInfo.FileModel[1].Name);
+            Assert.AreEqual(file1.Name, getDirInfo.FileModel[2].Name);
+            Assert.AreEqual(file4.Name, getDirInfo.FileModel[3].Name);
         }
 
         [Test]
@@ -96,11 +96,11 @@ namespace UnitTests
         {
             var getDirInfo = CompletionDiskSpaceProcessorDescending();
 
-            Assert.AreEqual(dir1.DirectoryName, getDirInfo[0].Name);
-            Assert.AreEqual(file3.Name, getDirInfo[4].Name);
-            Assert.AreEqual(file2.Name, getDirInfo[3].Name);
-            Assert.AreEqual(file1.Name, getDirInfo[2].Name);
-            Assert.AreEqual(file4.Name, getDirInfo[1].Name);
+            Assert.AreEqual(dir1.DirectoryName, getDirInfo.DirectoryModel[0].Name);
+            Assert.AreEqual(file3.Name, getDirInfo.FileModel[3].Name);
+            Assert.AreEqual(file2.Name, getDirInfo.FileModel[2].Name);
+            Assert.AreEqual(file1.Name, getDirInfo.FileModel[1].Name);
+            Assert.AreEqual(file4.Name, getDirInfo.FileModel[0].Name);
         }
 
         [Test]
@@ -108,11 +108,11 @@ namespace UnitTests
         {
             var getDirInfo = CompletionDiskSpaceProcessorAscending();
 
-            Assert.AreEqual("0Byte", getDirInfo[0].Size);
-            Assert.AreEqual("100Byte", getDirInfo[1].Size);
-            Assert.AreEqual("1Kb", getDirInfo[2].Size);
-            Assert.AreEqual("3Mb", getDirInfo[3].Size);
-            Assert.AreEqual("1Gb", getDirInfo[4].Size);
+            Assert.AreEqual("0Byte", getDirInfo.DirectoryModel[0].Size);
+            Assert.AreEqual("100Byte", getDirInfo.FileModel[0].Size);
+            Assert.AreEqual("1Kb", getDirInfo.FileModel[1].Size);
+            Assert.AreEqual("3Mb", getDirInfo.FileModel[2].Size);
+            Assert.AreEqual("1Gb", getDirInfo.FileModel[3].Size);
         }
 
         [Test]
@@ -120,12 +120,12 @@ namespace UnitTests
         {
             var getDirInfo = CompletionDiskSpaceProcessorForDir();
 
-            Assert.AreEqual(dir3.DirectoryName, getDirInfo[0].Name);
-            Assert.AreEqual(dir1.DirectoryName, getDirInfo[1].Name);
+            Assert.AreEqual(dir3.DirectoryName, getDirInfo.DirectoryModel[0].Name);
+            Assert.AreEqual(dir1.DirectoryName, getDirInfo.DirectoryModel[1].Name);
 
-            Assert.AreEqual(file3.Name, getDirInfo[2].Name);           
-            Assert.AreEqual(file1.Name, getDirInfo[3].Name);
-            Assert.AreEqual(file4.Name, getDirInfo[4].Name);
+            Assert.AreEqual(file3.Name, getDirInfo.FileModel[0].Name);           
+            Assert.AreEqual(file1.Name, getDirInfo.FileModel[1].Name);
+            Assert.AreEqual(file4.Name, getDirInfo.FileModel[2].Name);
         }
 
         [Test]
@@ -133,8 +133,8 @@ namespace UnitTests
         {
             var getDirInfo = CompletionDiskSpaceProcessorForDir();
 
-            Assert.AreEqual(dir1.DirectoryName, getDirInfo[1].Name);
-            Assert.AreEqual("1.1Kb", getDirInfo[1].Size);
+            Assert.AreEqual(dir1.DirectoryName, getDirInfo.DirectoryModel[1].Name);
+            Assert.AreEqual("1.1Kb", getDirInfo.DirectoryModel[1].Size);
         }
 
 

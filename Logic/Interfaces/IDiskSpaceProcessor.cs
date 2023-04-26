@@ -10,6 +10,6 @@ namespace Logic.Interfaces
 {
     public interface IDiskSpaceProcessor
     {
-        public List<DirectoryInfoModel> GetDirectoryInfo(string path, bool isAscending);
+        public DirectoryInfoModel GetDirectoryInfo(string path, bool isAscending);
     }
 }

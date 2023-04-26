@@ -8,10 +8,8 @@ namespace Logic.Models
 {
     public class DirectoryInfoModel
     {
-        public string Name { get; set; }
-        public string Size { get; set; }
-        public long BytesSize { get; set; }
-        public string? Extension { get; set; }
-        public bool IsDirectory { get; set; }
+        public List<DirectoryModel> DirectoryModel{ get; set; }
+        public List<FileModel> FileModel { get; set; }
+        
     }
 }

@@ -36,7 +36,7 @@ namespace DAL.Repository
             if (Directory.Exists(path))
             {
                 var filesIO = new DirectoryInfo(path).GetFiles();
-                files = filesIO.Select(x => new FileInfoDTO() { Name = x.Name, Size = x.Length.ToString(),
+                files = filesIO.Select(x => new FileInfoDTO() { Name = x.Name,
                     BytesSize = x.Length, Extension = x.Extension }).ToList();
             }
             else
