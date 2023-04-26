@@ -21,7 +21,8 @@ namespace DAL.Repository
             {
                 var dirsIO = new DirectoryInfo(path).GetDirectories();
 
-                dirs = dirsIO.Select(x => new DirectoryInfoDTO() { Path = x.FullName, DirectoryName = x.Name }).ToArray();
+                dirs = dirsIO.Select(x => new DirectoryInfoDTO() { Path = x.FullName, 
+                    DirectoryName = x.Name }).ToArray();
             }
             else
             {
@@ -35,7 +36,8 @@ namespace DAL.Repository
             if (Directory.Exists(path))
             {
                 var filesIO = new DirectoryInfo(path).GetFiles();
-                files = filesIO.Select(x => new FileInfoDTO() { Name = x.Name, Size = x.Length.ToString(), Extension = x.Extension }).ToArray();
+                files = filesIO.Select(x => new FileInfoDTO() { Name = x.Name, Size = x.Length.ToString(),
+                    BytesSize = x.Length, Extension = x.Extension }).ToArray();
             }
             else
             {

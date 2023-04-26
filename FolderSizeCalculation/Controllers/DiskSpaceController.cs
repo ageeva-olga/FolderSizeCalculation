@@ -21,11 +21,11 @@ namespace FolderSizeCalculation.Controllers
         }
 
         [HttpGet("{path}")]
-        public IActionResult GetFiles(string path)
+        public IActionResult GetFiles(string path, bool isAscending)
         {           
             try
             {
-                var info = _diskSpaceProc.GetDirectoryInfo(path);
+                var info = _diskSpaceProc.GetDirectoryInfo(path, isAscending);
                 return Ok(info);
             }
 

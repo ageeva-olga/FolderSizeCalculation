@@ -27,7 +27,7 @@ namespace Logic.Processor
             _logger = logger;
         }
 
-        public List<DirectoryInfoModel> GetDirectoryInfo(string path)
+        public List<DirectoryInfoModel> GetDirectoryInfo(string path, bool isAscending)
         {
             if (!_validator.Validate(path))
             {
@@ -38,7 +38,6 @@ namespace Logic.Processor
 
             }
 
-            var filesInfo = new List<DirectoryInfoModel>();
 
             DirectoryInfoDTO[] dirs = null;
             try
@@ -62,17 +61,29 @@ namespace Logic.Processor
                 throw;
             }
 
-            AddDirectories(filesInfo, dirs);
+            var directoriesInfo = AddDirectories(dirs);
+            var sortedDirectoriesInfo = SortFileInfo(directoriesInfo, isAscending);
 
-            AddFiles(filesInfo, files);
-            var sortedFilesInfo = SortFileInfo(filesInfo);
+            var filesInfo = AddFiles(files);
+            var sortedFilesInfo = SortFileInfo(filesInfo, isAscending);
 
-            return sortedFilesInfo;
+
+
+            return sortedDirectoriesInfo.Concat(sortedFilesInfo).ToList();
         }
 
-        private List<DirectoryInfoModel> SortFileInfo(List<DirectoryInfoModel> filesInfo)
+        private List<DirectoryInfoModel> SortFileInfo(List<DirectoryInfoModel> filesInfo, bool ascending)
         {
-            var sortedFilesInfo = filesInfo.OrderBy(x => long.Parse(x.Size)).ToList();
+            var sortedFilesInfo = new List<DirectoryInfoModel>();
+            if (ascending)
+            {
+                sortedFilesInfo = filesInfo.OrderBy(x => long.Parse(x.Size)).ToList();
+            }
+            else
+            {
+                sortedFilesInfo = filesInfo.OrderByDescending(x => long.Parse(x.Size)).ToList();
+            }
+            
 
             foreach (var sortFileInfo in sortedFilesInfo)
             {
@@ -82,8 +93,10 @@ namespace Logic.Processor
             return sortedFilesInfo;
         }
 
-        private static void AddFiles(List<DirectoryInfoModel> filesInfo, FileInfoDTO[] files)
+        private static List<DirectoryInfoModel> AddFiles(FileInfoDTO[] files)
         {
+            var filesInfo = new List<DirectoryInfoModel>();
+
             if (files != null)
             {
                 foreach (var file in files)
@@ -92,27 +105,36 @@ namespace Logic.Processor
                     {
                         Name = file.Name,
                         Size = file.Size,
+                        BytesSize = file.BytesSize,
                         Extension = file.Extension,
                         IsDirectory = false
                     });
                 }
             }
+
+            return filesInfo;
         }
 
-        private void AddDirectories(List<DirectoryInfoModel> filesInfo, DirectoryInfoDTO[] dirs)
+        private List<DirectoryInfoModel> AddDirectories(DirectoryInfoDTO[] dirs)
         {
+            var directoriesInfo = new List<DirectoryInfoModel>();
+
             if (dirs != null)
             {
                 foreach (var dir in dirs)
                 {
-                    filesInfo.Add(new DirectoryInfoModel()
+                    var size = SumSizeDirectories(new DirectoryInfoDTO[] { dir });
+                    directoriesInfo.Add(new DirectoryInfoModel()
                     {
                         Name = dir.DirectoryName,
-                        Size = SumSizeDirectories(new DirectoryInfoDTO[] { dir }).ToString(),
+                        Size = size.ToString(),
+                        BytesSize = size,
                         IsDirectory = true
                     });
                 }
             }
+
+            return directoriesInfo;
         }
 
         private long SumSizeDirectories(DirectoryInfoDTO[] dirs)
@@ -169,14 +191,13 @@ namespace Logic.Processor
         {
             var nameDimension = new string[] { "Byte" , "Kb" , "Mb" , "Gb" };
             var count = 0;
-            var doubleSize = (double)size;
 
-            while (doubleSize >= 1000 && count < 3)
+            while (size >= 1000 && count < 3)
             {
-                doubleSize = doubleSize / 1000;
+                size = size / (long)1000;
                 count++;
             }
-            return doubleSize.ToString() + nameDimension[count];
+            return size.ToString() + nameDimension[count];
         }
     }
 }

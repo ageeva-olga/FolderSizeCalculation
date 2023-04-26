@@ -10,6 +10,7 @@ namespace Logic.Models
     {
         public string Name { get; set; }
         public string Size { get; set; }
+        public long BytesSize { get; set; }
         public string? Extension { get; set; }
         public bool IsDirectory { get; set; }
     }
