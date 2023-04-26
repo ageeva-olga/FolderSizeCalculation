@@ -10,7 +10,7 @@ namespace DAL.Interfaces
 {
     public interface IDiskSpaceRepository
     {
-        public DirectoryInfoDTO[] GetDirectories(string path);
-        public FileInfoDTO[] GetFiles(string path);
+        public List<DirectoryInfoDTO> GetDirectories(string path);
+        public List<FileInfoDTO> GetFiles(string path);
     }
 }

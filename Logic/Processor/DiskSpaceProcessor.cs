@@ -27,7 +27,7 @@ namespace Logic.Processor
             _logger = logger;
         }
 
-        public List<DirectoryInfoModel> GetDirectoryInfo(string path)
+        public DirectoryInfoModel GetDirectoryInfo(string path, bool isAscending)
         {
             if (!_validator.Validate(path))
             {
@@ -38,126 +38,103 @@ namespace Logic.Processor
 
             }
 
-            var filesInfo = new List<DirectoryInfoModel>();
+            List<DirectoryInfoDTO> dirs = GetDirectories(path);
+            List<FileInfoDTO> files = GetFiles(path);
 
-            DirectoryInfoDTO[] dirs = null;
-            try
-            {
-                dirs = _diskSpaceRepo.GetDirectories(path);
-            }
-            catch (FileNotFoundException ex)
-            {
-                _logger.LogError(ex, ex.Message);
-                throw;
-            }
+            var directoryModels = new List<DirectoryModel>();
+            directoryModels = ProcessDirectories(dirs);
 
-            FileInfoDTO[] files = null;
-            try
+            var fileModels = new List<FileModel>();
+            fileModels = ProcessFiles(files);
+
+            if (isAscending)
             {
-                files = _diskSpaceRepo.GetFiles(path);
+                directoryModels = directoryModels.OrderBy(x => x.BytesSize).ToList();
+                fileModels = fileModels.OrderBy(x => x.BytesSize).ToList();
             }
-            catch (FileNotFoundException ex)
+            else
             {
-                _logger.LogError(ex, ex.Message);
-                throw;
+                directoryModels = directoryModels.OrderByDescending(x => x.BytesSize).ToList();
+                fileModels = fileModels.OrderByDescending(x => x.BytesSize).ToList();
             }
 
-            AddDirectories(filesInfo, dirs);
+            foreach (var directoryModel in directoryModels)
+            {
+                directoryModel.Size = TranformFromBytes(directoryModel.BytesSize);
+            }
 
-            AddFiles(filesInfo, files);
-            var sortedFilesInfo = SortFileInfo(filesInfo);
+            foreach (var fileModel in fileModels)
+            {
+                fileModel.Size = TranformFromBytes(fileModel.BytesSize);
+            }
 
-            return sortedFilesInfo;
+            var directoryInfoModel = new DirectoryInfoModel() { DirectoryModel = directoryModels, 
+                FileModel = fileModels};
+
+            return directoryInfoModel;
         }
 
-        private List<DirectoryInfoModel> SortFileInfo(List<DirectoryInfoModel> filesInfo)
+        private static List<FileModel> ProcessFiles(List<FileInfoDTO> files)
         {
-            var sortedFilesInfo = filesInfo.OrderBy(x => long.Parse(x.Size)).ToList();
+            var filesInfo = new List<FileModel>() { };
 
-            foreach (var sortFileInfo in sortedFilesInfo)
-            {
-                sortFileInfo.Size = TranformFromBytes(long.Parse(sortFileInfo.Size));
-            }
-
-            return sortedFilesInfo;
-        }
-
-        private static void AddFiles(List<DirectoryInfoModel> filesInfo, FileInfoDTO[] files)
-        {
             if (files != null)
             {
                 foreach (var file in files)
                 {
-                    filesInfo.Add(new DirectoryInfoModel()
+                    filesInfo.Add(new FileModel()
                     {
                         Name = file.Name,
-                        Size = file.Size,
-                        Extension = file.Extension,
-                        IsDirectory = false
+                        Size = file.BytesSize.ToString(),
+                        BytesSize = file.BytesSize,
+                        Extension = file.Extension
                     });
                 }
             }
+
+            return filesInfo;
         }
 
-        private void AddDirectories(List<DirectoryInfoModel> filesInfo, DirectoryInfoDTO[] dirs)
+        private List<DirectoryModel> ProcessDirectories(List<DirectoryInfoDTO> dirs)
         {
+            var directoriesInfo = new List<DirectoryModel>() { };
+
             if (dirs != null)
             {
                 foreach (var dir in dirs)
                 {
-                    filesInfo.Add(new DirectoryInfoModel()
+                    var size = SumSizeDirectories(new List<DirectoryInfoDTO> { dir });
+                    directoriesInfo.Add(new DirectoryModel()
                     {
                         Name = dir.DirectoryName,
-                        Size = SumSizeDirectories(new DirectoryInfoDTO[] { dir }).ToString(),
-                        IsDirectory = true
+                        Size = size.ToString(),
+                        BytesSize = size
                     });
                 }
             }
+
+            return directoriesInfo;
         }
 
-        private long SumSizeDirectories(DirectoryInfoDTO[] dirs)
+        private long SumSizeDirectories(List<DirectoryInfoDTO> dirs)
         {
             long sum = 0;
 
             foreach (var dir in dirs)
             {
-                DirectoryInfoDTO[] dirsInDirDTO = null;
-                try
-                {
-                    dirsInDirDTO = _diskSpaceRepo.GetDirectories(dir.Path);
-                }
-                catch (FileNotFoundException ex)
-                {
-                    _logger.LogError(ex, ex.Message);
-                    throw;
-                }
+                List<DirectoryInfoDTO> dirsInDirDTO = GetDirectories(dir.Path);
+                List<FileInfoDTO> filesInDirDTO = GetFiles(dir.Path);
 
-                FileInfoDTO[] filesInDirDTO = null;
-                try
+                if (dirsInDirDTO != null)
                 {
-                    filesInDirDTO = _diskSpaceRepo.GetFiles(dir.Path);
-                }
-                catch (FileNotFoundException ex)
-                {
-                    _logger.LogError(ex, ex.Message);
-                    throw;
-                }
-
-                if (dirsInDirDTO.Length != 0)
-                {
-                    foreach (var file in filesInDirDTO)
-                    {
-                        sum += long.Parse(file.Size);
-                    }
-
                     sum += SumSizeDirectories(dirsInDirDTO);
                 }
 
-                else
+                if (dirsInDirDTO != null)
                 {
                     foreach (var file in filesInDirDTO)
                     {
-                        sum += long.Parse(file.Size);
+                        sum += file.BytesSize;
                     }
                 }
             }
@@ -165,26 +142,51 @@ namespace Logic.Processor
             return sum;
         }
 
+        private List<DirectoryInfoDTO> GetDirectories(string path)
+        {
+            var dirsInDirDTO = new List<DirectoryInfoDTO>() { };
+            try
+            {
+                dirsInDirDTO = _diskSpaceRepo.GetDirectories(path);
+            }
+            catch (FileNotFoundException ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                throw;
+            }
+
+            return dirsInDirDTO;
+        }
+
+        private List<FileInfoDTO> GetFiles(string path)
+        {
+            var filesInDirDTO = new List<FileInfoDTO>() { };
+            try
+            {
+                filesInDirDTO = _diskSpaceRepo.GetFiles(path);
+            }
+            catch (FileNotFoundException ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                throw;
+            }
+
+            return filesInDirDTO;
+        }
+
         private string TranformFromBytes(long size)
         {
-            string transformSize = "";
-            if(size < 1000)
+            var nameDimension = new string[] { "Byte", "Kb", "Mb", "Gb" };
+            var count = 0;
+            var doubleSize = (double)size;
+
+            while (doubleSize >= 1000 && count < 3)
             {
-                transformSize = size.ToString() + "Byte";
+                doubleSize = doubleSize / 1000;
+                count++;
             }
-            else if (1000 <= size && size < 1000000)
-            {
-                transformSize = ((double)size /1000).ToString() + "Kb";
-            }
-            else if (1000000 <= size && size < 1000000000)
-            {
-                transformSize = ((double)size / 1000000).ToString() + "Mb";
-            }
-            else
-            {
-                transformSize = ((double)size / 1000000000).ToString() + "Gb";
-            }
-            return transformSize;
+
+            return Math.Round(doubleSize,2).ToString() + nameDimension[count];
         }
     }
 }
